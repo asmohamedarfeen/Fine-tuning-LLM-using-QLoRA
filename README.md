@@ -13,10 +13,11 @@ Featuring a **dual-track architecture**:
 - [x] **Task 1: Environment Configuration & Hardware Setup** (Completed)
   - Modular environment configuration (`requirements.txt`, `requirements-mac.txt`, `requirements-cuda.txt`).
   - Apple Silicon M4 runtime verification test (`scripts/verify_env.py`).
-- [ ] **Task 2: Enterprise Schema & Dataset Pipeline** (In Progress)
-  - Multi-turn ChatML prompt structure (`<|im_start|>...<|im_end|>`).
-  - Enterprise relational DDL schemas and reasoning chains.
-- [ ] **Task 3: Evaluation Suite — Syntax Parser & SQLite In-Memory Sandbox**
+- [x] **Task 2: Enterprise Schema & Dataset Pipeline** (Completed)
+  - Multi-turn ChatML prompt structure (`<|im_start|>...<|im_end|>`) for `Qwen2.5-Coder`.
+  - Realistic multi-table enterprise relational DDL schemas (E-Commerce, SaaS, Financial, Healthcare).
+  - Deterministic train/validation/test dataset partitioning (`data/prepare_dataset.py`).
+- [ ] **Task 3: Evaluation Suite — Syntax Parser & SQLite In-Memory Sandbox** (In Progress)
   - SQL dialect syntax validator via `sqlglot`.
   - Execution Accuracy (EX) benchmark against isolated SQLite sandbox.
 - [ ] **Task 4: Apple Silicon MLX QLoRA Engine & Hyperparameter Configs**
