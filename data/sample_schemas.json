@@ -1,0 +1,76 @@
+[
+  {
+    "domain": "ecommerce_sales",
+    "ddl": "CREATE TABLE customers (\n    customer_id VARCHAR(36) PRIMARY KEY,\n    name VARCHAR(255) NOT NULL,\n    email VARCHAR(255) UNIQUE NOT NULL,\n    country VARCHAR(100) NOT NULL,\n    created_at TIMESTAMP NOT NULL\n);\n\nCREATE TABLE orders (\n    order_id VARCHAR(36) PRIMARY KEY,\n    customer_id VARCHAR(36) REFERENCES customers(customer_id),\n    total_amount NUMERIC(10, 2) NOT NULL,\n    status VARCHAR(50) NOT NULL,\n    order_date DATE NOT NULL\n);\n\nCREATE TABLE order_items (\n    item_id VARCHAR(36) PRIMARY KEY,\n    order_id VARCHAR(36) REFERENCES orders(order_id),\n    product_name VARCHAR(255) NOT NULL,\n    quantity INT NOT NULL,\n    unit_price NUMERIC(10, 2) NOT NULL\n);",
+    "samples": [
+      {
+        "question": "Which customers from Germany have spent more than 500 dollars in total on completed orders?",
+        "reasoning": "Filter customers by country 'Germany', join with completed orders, calculate total spend per customer, and filter for total > 500.",
+        "sql": "SELECT c.customer_id, c.name, SUM(o.total_amount) AS total_spend FROM customers c INNER JOIN orders o ON c.customer_id = o.customer_id WHERE c.country = 'Germany' AND o.status = 'completed' GROUP BY c.customer_id, c.name HAVING SUM(o.total_amount) > 500;"
+      },
+      {
+        "question": "What are the top 5 most frequently ordered products?",
+        "reasoning": "Sum the quantity per product_name in order_items, order descending by total quantity, and limit to 5.",
+        "sql": "SELECT product_name, SUM(quantity) AS total_quantity FROM order_items GROUP BY product_name ORDER BY total_quantity DESC LIMIT 5;"
+      },
+      {
+        "question": "Find the total revenue generated per order status in 2024.",
+        "reasoning": "Filter orders for the year 2024, group by order status, and compute the sum of total_amount.",
+        "sql": "SELECT status, SUM(total_amount) AS revenue FROM orders WHERE order_date >= '2024-01-01' AND order_date < '2025-01-01' GROUP BY status;"
+      }
+    ]
+  },
+  {
+    "domain": "saas_analytics",
+    "ddl": "CREATE TABLE organizations (\n    org_id VARCHAR(36) PRIMARY KEY,\n    org_name VARCHAR(255) NOT NULL,\n    plan_tier VARCHAR(50) NOT NULL,\n    is_active BOOLEAN NOT NULL\n);\n\nCREATE TABLE user_events (\n    event_id VARCHAR(36) PRIMARY KEY,\n    org_id VARCHAR(36) REFERENCES organizations(org_id),\n    event_type VARCHAR(100) NOT NULL,\n    event_timestamp TIMESTAMP NOT NULL\n);",
+    "samples": [
+      {
+        "question": "List active enterprise organizations that had more than 1000 events recorded in October 2024.",
+        "reasoning": "Filter active orgs on 'enterprise' tier, join with events in October 2024, group by org and filter count > 1000.",
+        "sql": "SELECT o.org_id, o.org_name, COUNT(e.event_id) AS event_count FROM organizations o INNER JOIN user_events e ON o.org_id = e.org_id WHERE o.is_active = TRUE AND o.plan_tier = 'enterprise' AND e.event_timestamp >= '2024-10-01' AND e.event_timestamp < '2024-11-01' GROUP BY o.org_id, o.org_name HAVING COUNT(e.event_id) > 1000;"
+      },
+      {
+        "question": "What are the top 3 most common event types for non-enterprise organizations?",
+        "reasoning": "Filter organizations where plan_tier is not 'enterprise', join with user_events, group by event_type, and find top 3 by frequency.",
+        "sql": "SELECT e.event_type, COUNT(e.event_id) AS frequency FROM user_events e INNER JOIN organizations o ON e.org_id = o.org_id WHERE o.plan_tier != 'enterprise' GROUP BY e.event_type ORDER BY frequency DESC LIMIT 3;"
+      },
+      {
+        "question": "Find organizations that have not recorded any user events in the last 60 days.",
+        "reasoning": "Left join organizations with events in the last 60 days and filter for records where event_id is null.",
+        "sql": "SELECT o.org_id, o.org_name FROM organizations o LEFT JOIN user_events e ON o.org_id = e.org_id AND e.event_timestamp >= CURRENT_DATE - INTERVAL '60 days' WHERE e.event_id IS NULL;"
+      }
+    ]
+  },
+  {
+    "domain": "financial_trading",
+    "ddl": "CREATE TABLE assets (\n    asset_id VARCHAR(36) PRIMARY KEY,\n    ticker VARCHAR(10) UNIQUE NOT NULL,\n    asset_type VARCHAR(50) NOT NULL\n);\n\nCREATE TABLE portfolios (\n    portfolio_id VARCHAR(36) PRIMARY KEY,\n    owner_id VARCHAR(36) NOT NULL,\n    risk_profile VARCHAR(50) NOT NULL\n);\n\nCREATE TABLE transactions (\n    tx_id VARCHAR(36) PRIMARY KEY,\n    portfolio_id VARCHAR(36) REFERENCES portfolios(portfolio_id),\n    asset_id VARCHAR(36) REFERENCES assets(asset_id),\n    tx_type VARCHAR(10) NOT NULL,\n    quantity NUMERIC(14, 4) NOT NULL,\n    execution_price NUMERIC(12, 2) NOT NULL,\n    tx_timestamp TIMESTAMP NOT NULL\n);",
+    "samples": [
+      {
+        "question": "What is the total buy volume in dollars for tech stock assets in 2024?",
+        "reasoning": "Filter transactions by type 'BUY' in 2024, join with assets of type 'tech_stock', and calculate sum of quantity times execution price.",
+        "sql": "SELECT SUM(t.quantity * t.execution_price) AS total_buy_volume FROM transactions t INNER JOIN assets a ON t.asset_id = a.asset_id WHERE t.tx_type = 'BUY' AND a.asset_type = 'tech_stock' AND t.tx_timestamp >= '2024-01-01' AND t.tx_timestamp < '2025-01-01';"
+      },
+      {
+        "question": "List portfolios that executed more than 20 sell transactions in November 2024.",
+        "reasoning": "Filter transactions with tx_type 'SELL' in November 2024, group by portfolio_id, and filter having count > 20.",
+        "sql": "SELECT p.portfolio_id, p.owner_id, COUNT(t.tx_id) AS sell_count FROM portfolios p INNER JOIN transactions t ON p.portfolio_id = t.portfolio_id WHERE t.tx_type = 'SELL' AND t.tx_timestamp >= '2024-11-01' AND t.tx_timestamp < '2024-12-01' GROUP BY p.portfolio_id, p.owner_id HAVING COUNT(t.tx_id) > 20;"
+      }
+    ]
+  },
+  {
+    "domain": "healthcare_records",
+    "ddl": "CREATE TABLE patients (\n    patient_id VARCHAR(36) PRIMARY KEY,\n    birth_date DATE NOT NULL,\n    gender VARCHAR(20) NOT NULL,\n    blood_type VARCHAR(5) NOT NULL\n);\n\nCREATE TABLE appointments (\n    appointment_id VARCHAR(36) PRIMARY KEY,\n    patient_id VARCHAR(36) REFERENCES patients(patient_id),\n    department VARCHAR(100) NOT NULL,\n    appointment_date DATE NOT NULL,\n    status VARCHAR(50) NOT NULL\n);\n\nCREATE TABLE diagnoses (\n    diagnosis_id VARCHAR(36) PRIMARY KEY,\n    appointment_id VARCHAR(36) REFERENCES appointments(appointment_id),\n    icd_code VARCHAR(20) NOT NULL,\n    severity VARCHAR(50) NOT NULL\n);",
+    "samples": [
+      {
+        "question": "How many unique patients had completed appointments in cardiology with severe diagnoses in 2024?",
+        "reasoning": "Join patients, appointments, and diagnoses filtering for status 'completed', department 'cardiology', severity 'severe', and year 2024, then count distinct patients.",
+        "sql": "SELECT COUNT(DISTINCT a.patient_id) AS patient_count FROM appointments a INNER JOIN diagnoses d ON a.appointment_id = d.appointment_id WHERE a.status = 'completed' AND a.department = 'cardiology' AND d.severity = 'severe' AND a.appointment_date >= '2024-01-01' AND a.appointment_date < '2025-01-01';"
+      },
+      {
+        "question": "List the top 5 most frequent ICD diagnosis codes among female patients born after 1990.",
+        "reasoning": "Join patients, appointments, and diagnoses filtering for gender 'female' and birth_date after 1990-12-31, group by icd_code and order by frequency descending limit 5.",
+        "sql": "SELECT d.icd_code, COUNT(d.diagnosis_id) AS code_frequency FROM diagnoses d INNER JOIN appointments a ON d.appointment_id = a.appointment_id INNER JOIN patients p ON a.patient_id = p.patient_id WHERE p.gender = 'female' AND p.birth_date > '1990-12-31' GROUP BY d.icd_code ORDER BY code_frequency DESC LIMIT 5;"
+      }
+    ]
+  }
+]
