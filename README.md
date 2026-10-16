@@ -17,7 +17,7 @@ Featuring a **dual-track architecture**:
   - Multi-turn ChatML prompt structure (`<|im_start|>...<|im_end|>`) for `Qwen2.5-Coder`.
   - Realistic multi-table enterprise relational DDL schemas (E-Commerce, SaaS, Financial, Healthcare).
   - Deterministic train/validation/test dataset partitioning (`data/prepare_dataset.py`).
-- [ ] **Task 3: Evaluation Suite — Syntax Parser & SQLite In-Memory Sandbox** (In Progress)
+- [x] **Task 3: Evaluation Suite — Syntax Parser & SQLite In-Memory Sandbox** (Completed)
   - SQL dialect syntax validator via `sqlglot`.
   - Execution Accuracy (EX) benchmark against isolated SQLite sandbox.
 - [ ] **Task 4: Apple Silicon MLX QLoRA Engine & Hyperparameter Configs**
