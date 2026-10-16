@@ -25,8 +25,10 @@ Featuring a **dual-track architecture**:
   - Command generator & runner for `mlx_lm.lora` (`mlx_engine/train_mlx.py`).
   - LoRA adapter fusion tool (`mlx_engine/fuse_mlx.py`).
   - GGUF export instructions for Ollama and LM Studio (`mlx_engine/export_gguf.py`).
-- [ ] **Task 5: Companion NVIDIA CUDA Engine & Colab Notebook**
-  - Hugging Face `SFTTrainer` with bitsandbytes NF4 quantization.
+- [x] **Task 5: Companion NVIDIA CUDA Engine & Colab Notebook** (Completed)
+  - Hugging Face `SFTTrainer` with bitsandbytes NF4 quantization (`cuda_engine/train_cuda.py`).
+  - Production hyperparameter configuration (`configs/hf_train_config.yaml`).
+  - Google Colab notebook with evaluation benchmark (`notebooks/colab_qlora_sql.ipynb`).
 - [ ] **Task 6: Interactive Demo & Deployment Artifacts**
   - Gradio Web UI, interactive terminal CLI, and Ollama `Modelfile`.
 - [ ] **Task 7: Comprehensive Documentation & Benchmark Report**
@@ -55,6 +57,20 @@ python mlx_engine/fuse_mlx.py
 
 # Display GGUF export instructions
 python mlx_engine/export_gguf.py
+```
+
+### 3. Companion NVIDIA CUDA Engine & Google Colab
+```bash
+# Install CUDA dependencies (Linux / Colab / AWS EC2)
+pip install -r requirements-cuda.txt
+
+# Run dry-run validation (works on non-CUDA host as well)
+python cuda_engine/train_cuda.py --dry-run
+
+# Run full QLoRA training on NVIDIA GPU
+python cuda_engine/train_cuda.py --config configs/hf_train_config.yaml
+
+# Google Colab: Open and run notebooks/colab_qlora_sql.ipynb
 ```
 
 ---
