@@ -20,9 +20,11 @@ Featuring a **dual-track architecture**:
 - [x] **Task 3: Evaluation Suite — Syntax Parser & SQLite In-Memory Sandbox** (Completed)
   - SQL dialect syntax validator via `sqlglot`.
   - Execution Accuracy (EX) benchmark against isolated SQLite sandbox.
-- [ ] **Task 4: Apple Silicon MLX QLoRA Engine & Hyperparameter Configs**
-  - Native Metal Performance Shaders 4-bit LoRA training script.
-  - Adapter fusion utility.
+- [x] **Task 4: Apple Silicon MLX QLoRA Engine & Hyperparameter Configs** (Completed)
+  - Native Metal Performance Shaders 4-bit LoRA training configuration (`configs/mlx_train_config.yaml`).
+  - Command generator & runner for `mlx_lm.lora` (`mlx_engine/train_mlx.py`).
+  - LoRA adapter fusion tool (`mlx_engine/fuse_mlx.py`).
+  - GGUF export instructions for Ollama and LM Studio (`mlx_engine/export_gguf.py`).
 - [ ] **Task 5: Companion NVIDIA CUDA Engine & Colab Notebook**
   - Hugging Face `SFTTrainer` with bitsandbytes NF4 quantization.
 - [ ] **Task 6: Interactive Demo & Deployment Artifacts**
@@ -41,6 +43,18 @@ pip install -r requirements-mac.txt
 # Verify hardware & dependencies
 python scripts/verify_env.py
 pytest tests/test_environment.py -v
+```
+
+### 2. Apple Silicon MLX QLoRA Training & Export
+```bash
+# Display / generate MLX training CLI command
+python mlx_engine/train_mlx.py
+
+# Fuse trained LoRA adapter weights
+python mlx_engine/fuse_mlx.py
+
+# Display GGUF export instructions
+python mlx_engine/export_gguf.py
 ```
 
 ---
