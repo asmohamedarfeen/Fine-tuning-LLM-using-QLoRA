@@ -1,0 +1,12 @@
+model: "Qwen/Qwen2.5-Coder-7B-Instruct"
+quantized_model_path: "models/qwen2.5-7b-mlx-4bit"
+data_path: "data/processed"
+adapter_path: "adapters/mlx_sql_lora"
+lora_layers: 16
+batch_size: 2
+iters: 1000
+learning_rate: 1.0e-4
+steps_per_report: 10
+steps_per_eval: 100
+save_every: 200
+max_seq_length: 2048
