@@ -29,7 +29,7 @@ Featuring a **dual-track architecture**:
   - Hugging Face `SFTTrainer` with bitsandbytes NF4 quantization (`cuda_engine/train_cuda.py`).
   - Production hyperparameter configuration (`configs/hf_train_config.yaml`).
   - Google Colab notebook with evaluation benchmark (`notebooks/colab_qlora_sql.ipynb`).
-- [ ] **Task 6: Interactive Demo & Deployment Artifacts**
+- [x] **Task 6: Interactive Demo & Deployment Artifacts** (Completed)
   - Gradio Web UI, interactive terminal CLI, and Ollama `Modelfile`.
 - [ ] **Task 7: Comprehensive Documentation & Benchmark Report**
 
@@ -71,6 +71,19 @@ python cuda_engine/train_cuda.py --dry-run
 python cuda_engine/train_cuda.py --config configs/hf_train_config.yaml
 
 # Google Colab: Open and run notebooks/colab_qlora_sql.ipynb
+```
+
+### 4. Interactive Demo & Local Deployment
+```bash
+# Launch interactive terminal CLI for ChatML prompt formatting
+python demo/cli_query.py
+
+# Launch Gradio Web UI with in-memory SQLite sandbox
+python demo/app.py
+
+# Deploy with Ollama locally
+ollama create qwen2.5-coder-sql -f demo/Modelfile
+ollama run qwen2.5-coder-sql
 ```
 
 ---
