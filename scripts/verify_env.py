@@ -22,10 +22,7 @@ def check_env() -> bool:
 
             print(f"[+] MLX installed successfully: {mx.__version__}")
         except ImportError:
-            print(
-                "[!] MLX not yet installed. Run: pip install -r "
-                "requirements-mac.txt"
-            )
+            print("[!] MLX not yet installed. Run: pip install -r requirements-mac.txt")
     else:
         print("[i] Non-Mac or x86 system. HF/CUDA companion engine supported.")
     return True

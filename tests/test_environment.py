@@ -17,9 +17,9 @@ def test_core_dependencies() -> None:
     ]
     for package in core_packages:
         module = importlib.util.find_spec(package)
-        assert (
-            module is not None
-        ), f"Required core package '{package}' is not installed."
+        assert module is not None, (
+            f"Required core package '{package}' is not installed."
+        )
 
 
 def test_check_env() -> None:
