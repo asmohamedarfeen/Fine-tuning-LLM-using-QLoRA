@@ -35,6 +35,9 @@ def load_config(path: str | Path = "configs/hf_train_config.yaml") -> dict[str, 
 def get_bnb_config() -> Any | None:
     """Generates 4-bit NF4 configuration for bitsandbytes if available.
 
+    Dynamically chooses bfloat16 for Ampere/Hopper/Ada GPUs, or float16 for
+    Turing / Volta / Tesla T4 architectures.
+
     Returns:
         BitsAndBytesConfig if torch, transformers, and bitsandbytes are
         available and supported, otherwise None.
@@ -43,10 +46,14 @@ def get_bnb_config() -> Any | None:
         import torch
         from transformers import BitsAndBytesConfig
 
+        has_cuda = torch.cuda.is_available()
+        use_bf16 = bool(has_cuda and torch.cuda.is_bf16_supported())
+        compute_dtype = torch.bfloat16 if use_bf16 else torch.float16
+
         return BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_compute_dtype=compute_dtype,
             bnb_4bit_use_double_quant=True,
         )
     except (ImportError, RuntimeError, ValueError):
@@ -92,6 +99,8 @@ def get_peft_config(cfg: dict[str, Any]) -> Any | None:
 def get_training_args(cfg: dict[str, Any]) -> Any | None:
     """Constructs SFTConfig / TrainingArguments from configuration dictionary.
 
+    Dynamically selects BF16 on supported GPUs or FP16 for T4/Turing GPUs.
+
     Args:
         cfg: Configuration dictionary with hyperparameters.
 
@@ -103,6 +112,7 @@ def get_training_args(cfg: dict[str, Any]) -> Any | None:
         from trl import SFTConfig
 
         has_cuda = torch.cuda.is_available()
+        use_bf16 = bool(has_cuda and torch.cuda.is_bf16_supported())
         return SFTConfig(
             output_dir=str(cfg.get("output_dir", "adapters/hf_sql_lora")),
             learning_rate=float(cfg.get("learning_rate", 2.0e-4)),
@@ -114,8 +124,8 @@ def get_training_args(cfg: dict[str, Any]) -> Any | None:
             logging_steps=int(cfg.get("logging_steps", 10)),
             save_steps=int(cfg.get("save_steps", 200)),
             max_length=int(cfg.get("max_seq_length", 2048)),
-            fp16=False,
-            bf16=bool(has_cuda and torch.cuda.is_bf16_supported()),
+            fp16=bool(has_cuda and not use_bf16),
+            bf16=use_bf16,
             logging_dir=f"{cfg.get('output_dir', 'adapters/hf_sql_lora')}/logs",
             report_to="none",
             save_total_limit=2,
@@ -195,12 +205,16 @@ def run_training(
         return
 
     # CUDA hardware execution flow
+    from peft import prepare_model_for_kbit_training
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from trl import SFTTrainer
 
     bnb_config = get_bnb_config()
     peft_config = get_peft_config(cfg)
     training_args = get_training_args(cfg)
+
+    use_bf16 = bool(has_cuda and torch.cuda.is_bf16_supported())
+    compute_dtype = torch.bfloat16 if use_bf16 else torch.float16
 
     print(f"[*] Loading tokenizer for {cfg['model_id']}...")
     tokenizer = AutoTokenizer.from_pretrained(
@@ -210,14 +224,18 @@ def run_training(
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    print(f"[*] Loading 4-bit base model for {cfg['model_id']}...")
+    print(
+        f"[*] Loading 4-bit base model for {cfg['model_id']} (compute_dtype={compute_dtype})..."
+    )
     model = AutoModelForCausalLM.from_pretrained(
         cfg["model_id"],
         quantization_config=bnb_config,
         device_map="auto",
-        torch_dtype=torch.bfloat16,
+        torch_dtype=compute_dtype,
         trust_remote_code=True,
     )
+    if bnb_config is not None:
+        model = prepare_model_for_kbit_training(model)
 
     dataset = load_hf_dataset(cfg.get("dataset_path", "data/processed"))
 
@@ -226,6 +244,7 @@ def run_training(
         train_dataset=dataset["train"],
         eval_dataset=dataset.get("valid"),
         peft_config=peft_config,
+        processing_class=tokenizer,
         args=training_args,
     )
 

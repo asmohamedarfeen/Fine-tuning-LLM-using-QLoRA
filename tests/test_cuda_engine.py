@@ -4,6 +4,7 @@ Tests for NVIDIA CUDA QLoRA training engine, Hugging Face configurations, and Co
 
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import yaml
@@ -96,6 +97,31 @@ def test_get_training_args():
     assert args.max_length == 2048
 
 
+def test_get_training_args_dynamic_dtype():
+    """Verify dynamic precision selection (bf16 for Ampere+, fp16 for T4/Turing)."""
+    cfg = {"output_dir": "adapters/test_lora"}
+
+    # Simulate Tesla T4 GPU (CUDA True, BF16 False)
+    with (
+        patch("torch.cuda.is_available", return_value=True),
+        patch("torch.cuda.is_bf16_supported", return_value=False),
+    ):
+        args_t4 = get_training_args(cfg)
+        assert args_t4 is not None
+        assert args_t4.fp16 is True
+        assert args_t4.bf16 is False
+
+    # Simulate Ampere / A100 GPU (CUDA True, BF16 True)
+    with (
+        patch("torch.cuda.is_available", return_value=True),
+        patch("torch.cuda.is_bf16_supported", return_value=True),
+    ):
+        args_a100 = get_training_args(cfg)
+        assert args_a100 is not None
+        assert args_a100.fp16 is False
+        assert args_a100.bf16 is True
+
+
 def test_load_hf_dataset():
     """Verify dataset loading from processed JSONL files."""
     ds = load_hf_dataset("data/processed")
@@ -139,3 +165,8 @@ def test_colab_notebook_structure():
     assert "SFTTrainer" in all_sources
     assert "sqlglot" in all_sources
     assert "sqlite3" in all_sources
+    # Verify no conflicting PeftModel wrap before SFTTrainer
+    assert "get_peft_model" not in all_sources
+    # Verify processing_class=tokenizer is provided
+    assert "processing_class=tokenizer" in all_sources
+    assert "peft_config=peft_config" in all_sources
