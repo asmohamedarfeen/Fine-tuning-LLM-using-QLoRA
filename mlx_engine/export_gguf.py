@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 
 def get_gguf_conversion_command(
@@ -25,7 +26,7 @@ def get_gguf_conversion_command(
     """
     return [
         sys.executable,
-        f"{llama_cpp_path}/convert_hf_to_gguf.py",
+        str(Path(llama_cpp_path) / "convert_hf_to_gguf.py"),
         fused_model_dir,
         "--outtype",
         outtype,

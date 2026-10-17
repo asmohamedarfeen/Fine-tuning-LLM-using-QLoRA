@@ -72,7 +72,15 @@ def evaluate_single_sample(
             "error": f"Syntax Error: {syntax_err}",
         }
 
-    sandbox = SQLiteSandbox(ddl)
+    try:
+        sandbox = SQLiteSandbox(ddl)
+    except Exception as ddl_err:
+        return {
+            "valid_syntax": True,
+            "execution_match": False,
+            "error": f"DDL Initialization Error: {ddl_err}",
+        }
+
     try:
         # Execute gold query
         gold_ok, gold_rows, gold_err = sandbox.execute(gold_sql)

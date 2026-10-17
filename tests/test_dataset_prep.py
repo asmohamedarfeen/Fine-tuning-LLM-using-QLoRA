@@ -76,7 +76,7 @@ def test_extract_sql_from_text():
 def test_create_splits():
     items = list(range(100))
     train, val, test = create_splits(
-        items, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1
+        items, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, shuffle=False
     )
     assert len(train) == 80
     assert len(val) == 10
@@ -84,6 +84,25 @@ def test_create_splits():
     assert train == list(range(80))
     assert val == list(range(80, 90))
     assert test == list(range(90, 100))
+
+
+def test_create_splits_shuffled():
+    items = list(range(100))
+    train1, val1, test1 = create_splits(
+        items, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, shuffle=True, seed=42
+    )
+    assert len(train1) == 80
+    assert len(val1) == 10
+    assert len(test1) == 10
+    # Assert deterministic shuffle order differs from sequential
+    assert train1 != list(range(80))
+    # Assert determinism with same seed
+    train2, val2, test2 = create_splits(
+        items, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, shuffle=True, seed=42
+    )
+    assert train1 == train2
+    assert val1 == val2
+    assert test1 == test2
 
 
 def test_build_dataset_from_seed(tmp_path: Path):
@@ -107,7 +126,7 @@ def test_build_dataset_from_seed(tmp_path: Path):
 
     output_dir = tmp_path / "processed"
     build_dataset_from_seed(
-        seed_file, output_dir, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1
+        seed_file, output_dir, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, shuffle=False
     )
 
     train_file = output_dir / "train.jsonl"

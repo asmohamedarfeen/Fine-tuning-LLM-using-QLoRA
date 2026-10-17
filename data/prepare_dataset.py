@@ -5,6 +5,7 @@ Prepares enterprise text-to-SQL datasets in ChatML format.
 from __future__ import annotations
 
 import json
+import random
 import re
 from pathlib import Path
 from typing import Any
@@ -89,6 +90,8 @@ def create_splits(
     train_ratio: float = 0.8,
     val_ratio: float = 0.1,
     test_ratio: float = 0.1,
+    shuffle: bool = False,
+    seed: int | None = 42,
 ) -> tuple[list[Any], list[Any], list[Any]]:
     """
     Splits samples into train, validation, and test partitions.
@@ -98,17 +101,24 @@ def create_splits(
         train_ratio: Proportion of samples allocated to training set.
         val_ratio: Proportion of samples allocated to validation set.
         test_ratio: Proportion of samples allocated to testing set.
+        shuffle: Whether to randomly shuffle samples before partitioning.
+        seed: Random seed for deterministic shuffling.
 
     Returns:
         Tuple of (train_samples, val_samples, test_samples).
     """
-    total = len(samples)
+    sample_pool = list(samples)
+    if shuffle:
+        rng = random.Random(seed)
+        rng.shuffle(sample_pool)
+
+    total = len(sample_pool)
     n_train = int(total * train_ratio)
     n_val = int(total * val_ratio)
 
-    train = samples[:n_train]
-    val = samples[n_train : n_train + n_val]
-    test = samples[n_train + n_val :]
+    train = sample_pool[:n_train]
+    val = sample_pool[n_train : n_train + n_val]
+    test = sample_pool[n_train + n_val :]
     return train, val, test
 
 
@@ -118,6 +128,8 @@ def build_dataset_from_seed(
     train_ratio: float = 0.8,
     val_ratio: float = 0.1,
     test_ratio: float = 0.1,
+    shuffle: bool = True,
+    seed: int | None = 42,
 ) -> None:
     """
     Loads seed schemas, formats ChatML prompts, splits, and writes JSONL files.
@@ -152,6 +164,8 @@ def build_dataset_from_seed(
         train_ratio=train_ratio,
         val_ratio=val_ratio,
         test_ratio=test_ratio,
+        shuffle=shuffle,
+        seed=seed,
     )
 
     for split_name, split_data in [("train", train), ("valid", val), ("test", test)]:
