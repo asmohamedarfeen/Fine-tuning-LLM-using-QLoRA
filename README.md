@@ -1,3 +1,18 @@
+---
+language:
+- en
+license: mit
+tags:
+- text-to-sql
+- qlora
+- lora
+- mlx
+- peft
+- code
+- sql
+base_model: Qwen/Qwen2.5-Coder-7B-Instruct
+---
+
 # ⚡ Enterprise Text-to-SQL Engine: 4-Bit QLoRA on Apple Silicon & CUDA
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
